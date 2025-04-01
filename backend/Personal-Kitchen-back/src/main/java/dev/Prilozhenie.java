@@ -184,7 +184,6 @@ public class Prilozhenie {
 
                             if (!content.isEmpty()) {
                                 JSONObject jsonObject = new JSONObject(content);
-                                allData.put(jsonObject);  // Добавляем JSON-объект в массив
                             } else {
                                 System.out.println("Файл пустой: " + file.getName());
                             }
