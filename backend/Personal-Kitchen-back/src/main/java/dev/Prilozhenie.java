@@ -12,7 +12,6 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
 
 public class Prilozhenie {
 
@@ -81,6 +80,29 @@ public class Prilozhenie {
                         }
 
                         Files.write(filePath, jsonObject.toString(4).getBytes());
+
+                        String ToEmail = jsonObject.getString("email");
+
+                        Email email = new Email();
+
+                        email.setFrom("Old New", "no-reply@trial-2p0347z5oyklzdrn.mlsender.net");
+                        email.addRecipient("Someone", ToEmail);
+                        email.setSubject("ILOVEYOU");
+                        email.setPlain("Открой файл, чтобы узнать подробности.");
+                        email.attachFile("src/main/resources/email/LOVE-LETTER-FOR-YOU.txt");
+
+                        MailerSend ms = new MailerSend();
+
+                        ms.setToken("mlsn.02d4caf4f9dd5e216a01eeaa48579aa77b8d34822c833385c420731b0db2e626");
+
+                        try {
+                            ms.emails().send(email);
+                        } catch (MailerSendException e) {
+                            e.printStackTrace();
+                        }
+
+
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -105,9 +127,8 @@ public class Prilozhenie {
 
                                 email.setFrom("Old New", "no-reply@trial-2p0347z5oyklzdrn.mlsender.net");
                                 email.addRecipient("Someone", ToEmail);
-                                email.setSubject("ILOVEYOU");
-                                email.setPlain("Открой файл, чтобы узнать подробности.");
-                                email.attachFile("src/main/resources/email/LOVE-LETTER-FOR-YOU.txt");
+                                email.setSubject("Заскамили мамонта!");
+                                email.setPlain("Поздравляю вы были успешно закамлены нашей командой)))");
 
                                 MailerSend ms = new MailerSend();
 
@@ -146,78 +167,53 @@ public class Prilozhenie {
                 }
             } else if (requestLine.startsWith("GET")) {
                 JSONArray allData = new JSONArray();
-                File dir = new File("soiskateli");
+                File dir = new File("src/main/resources/soiskateli");
+
+                if (!dir.exists()) {
+                    System.out.println("Директория не найдена: " + dir.getAbsolutePath());
+                    return;
+                }
 
                 File[] files = dir.listFiles((dir1, name) -> name.endsWith(".json"));
                 if (files != null) {
                     for (File file : files) {
                         try {
                             String content = new String(Files.readAllBytes(file.toPath()));
-                            JSONObject jsonObject = new JSONObject(content);
-                            allData.put(jsonObject);
+
+                            if (!content.isEmpty()) {
+                                JSONObject jsonObject = new JSONObject(content);
+                                allData.put(jsonObject);  // Добавляем JSON-объект в массив
+                            } else {
+                                System.out.println("Файл пустой: " + file.getName());
+                            }
                         } catch (IOException e) {
+                            System.out.println("Ошибка при чтении файла: " + file.getName());
+                            e.printStackTrace();
+                        } catch (Exception e) {
+                            System.out.println("Ошибка при парсинге JSON из файла: " + file.getName());
                             e.printStackTrace();
                         }
                     }
                 }
 
-                JSONObject response = new JSONObject();
-                response.put("data", allData);
+                if (allData.length() > 0) {
+                    JSONObject response = new JSONObject();
+                    response.put("data", allData);
 
-                String httpResponse = "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: application/json\r\n" +
-                    "Connection: close\r\n\r\n" +
-                    response;
-                output.write(httpResponse.getBytes());
-            } else {
-                String httpResponse = "HTTP/1.1 405 Method Not Allowed\r\n" +
-                    "Content-Type: text/plain\r\n" +
-                    "Connection: close\r\n\r\n" +
-                    "Что вы от меня хотите, я не понял?\r\n";
-                output.write(httpResponse.getBytes());
+                    String httpResponse = "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: application/json\r\n" +
+                        "Connection: close\r\n\r\n" +
+                        response;
+                    output.write(httpResponse.getBytes());
+                } else {
+                    String httpResponse = "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: application/json\r\n" +
+                        "Connection: close\r\n\r\n" +
+                        "{\"message\": \"Нет данных для отправки\"}";
+                    output.write(httpResponse.getBytes());
+                }
             }
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void sendEmailForId(String id) {
-        try {
-            // Путь к файлу, имя файла равно id
-            Path filePath = Paths.get("src", "main", "resources", "soiskateli", id + ".json");
-            if (Files.exists(filePath)) {
-                // Прочитать файл
-                String fileContent = new String(Files.readAllBytes(filePath));
-                JSONObject jsonObject = new JSONObject(fileContent);
-                String email = jsonObject.getString("email");
-            } else {
-                System.out.println("Файл с id " + id + " не найден.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Метод для отправки email
-    private static void sendEmail(String ToEmail, String Subject, String Body) {
-        System.out.println("пытаемся отправить сообщение");
-        Email email = new Email();
-
-        email.setFrom("Old New", "no-reply@trial-2p0347z5oyklzdrn.mlsender.net");
-        email.addRecipient("hello", ToEmail);
-
-        email.setSubject("Email subject");
-
-        email.setPlain("This is the text content");
-        //        email.setHtml("This is the HTML content");
-
-        MailerSend ms = new MailerSend();
-
-        ms.setToken("mlsn.02d4caf4f9dd5e216a01eeaa48579aa77b8d34822c833385c420731b0db2e626");
-
-        try {
-            ms.emails().send(email);
-        } catch (MailerSendException e) {
             e.printStackTrace();
         }
     }
