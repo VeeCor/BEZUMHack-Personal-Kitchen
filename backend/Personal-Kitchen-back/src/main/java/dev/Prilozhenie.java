@@ -122,13 +122,15 @@ public class Prilozhenie {
                                 String fileContent = new String(Files.readAllBytes(filePath));
                                 JSONObject jsonObject1 = new JSONObject(fileContent);
                                 String ToEmail = jsonObject1.getString("email");
+                                jsonObject.put("selected", "true");
+                                Files.write(filePath, jsonObject.toString().getBytes());
 
                                 Email email = new Email();
 
                                 email.setFrom("Old New", "no-reply@trial-2p0347z5oyklzdrn.mlsender.net");
                                 email.addRecipient("Someone", ToEmail);
                                 email.setSubject("Заскамили мамонта!");
-                                email.setPlain("Поздравляю вы были успешно закамлены нашей командой)))");
+                                email.setPlain("Поздравляю, вы были успешно закамлены нашей командой)))");
 
                                 MailerSend ms = new MailerSend();
 
